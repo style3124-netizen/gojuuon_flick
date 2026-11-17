@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>五十音表 — フリック入力で発音</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+<div class="top">
+<h1>五十音表</h1>
+<button class="sm" id="fsBtn" type="button" aria-label="フルスクリーン">⛶ 全画面</button>
+<button class="sm" id="setBtn" type="button" aria-label="設定">⚙ 設定</button>
+</div>
+
+<div class="compose">
+<div id="text" class="empty" aria-live="polite"></div>
+<div class="tools">
+<button class="sm" id="save" type="button">登録</button>
+<button class="sm" id="overwrite" type="button" hidden>上書き</button>
+<button class="sm" id="clear" type="button">全消去</button>
+</div>
+</div>
+<p id="note"></p>
+
+<div class="words"><div id="wlist" class="wlist"></div><span class="wcount" id="wcount">0/10</span></div>
+
+<div class="seg" id="modeSeg" role="group" aria-label="ページ">
+<button data-v="kana" aria-pressed="true">かな</button>
+<button data-v="num" aria-pressed="false">数字</button>
+<button data-v="abc" aria-pressed="false">ABC</button>
+</div>
+
+<div class="kb" id="kb">
+<div class="pad" id="padK"></div>
+<div class="pad" id="padN" hidden></div>
+<div class="pad" id="padA" hidden></div>
+<div class="acts">
+<button class="key act" id="bs" type="button" aria-label="1文字消す">⌫</button>
+<button class="key act" id="left" type="button" aria-label="カーソルを左へ">◀</button>
+<button class="key act" id="right" type="button" aria-label="カーソルを右へ">▶</button>
+<button class="key act go" id="playAll" type="button">読み上げ</button>
+</div>
+</div>
+</main>
+
+<div class="ov" id="cdlg" hidden>
+<div class="card" role="alertdialog" aria-labelledby="cmsg" style="width:min(340px,100%)">
+<p id="cmsg" style="margin:0 0 14px;font-size:1.05rem;font-weight:700"></p>
+<div class="row" style="justify-content:flex-end;margin:0"><button class="sm" id="cno" type="button">キャンセル</button><button class="sm main" id="cyes" type="button">削除する</button></div>
+</div>
+</div>
+
+<div class="ov" id="set" hidden>
+<div class="card" role="dialog" aria-label="設定">
+<h2>設定（自動で保存されます）</h2>
+<div class="row"><label for="rate">速さ</label><input type="range" id="rate" min="0.5" max="1.2" step="0.1"></div>
+<div class="row"><label for="se">効果音</label><select id="se"></select></div>
+<div class="row"><label for="vol">効果音の音量</label><input type="range" id="vol" min="0.1" max="1" step="0.1"></div>
+<div class="row"><label for="voice">声</label><select id="voice" disabled><option>読み込み中…</option></select></div>
+<div class="row"><label for="color">キーの色</label><input type="color" id="color" value="#f8fafc"><span id="sws" style="display:flex;gap:6px"></span><button class="sm" id="colorReset" type="button">元に戻す</button></div>
+<div class="row"><label for="rb">色分け</label><input type="checkbox" id="rb"><span>行ごとに色を変える</span></div>
+<div class="row" style="justify-content:flex-end"><button class="sm main" id="setClose" type="button">閉じる</button></div>
+</div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
