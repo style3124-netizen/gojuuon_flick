@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>五十音表 — フリック入力で発音</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;700&display=swap">
+<style>
+:root{--bg:#e9eef4;--panel:#f8fafc;--ink:#14213d;--sub:#5b6b85;--line:#c8d2e0;--accent:#2c4a8c;--accent-ink:#fff;--play:#f2c14e;--rs:65%;--rl:84%;--rink:#14213d;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1624;--panel:#18223a;--ink:#e8edf7;--sub:#98a6c2;--line:#2c3a58;--accent:#7f9fe6;--accent-ink:#0f1624;--play:#e0aa2e;--rs:35%;--rl:30%;--rink:#e8edf7}}
+:root[data-theme="dark"]{--bg:#0f1624;--panel:#18223a;--ink:#e8edf7;--sub:#98a6c2;--line:#2c3a58;--accent:#7f9fe6;--accent-ink:#0f1624;--play:#e0aa2e;--rs:35%;--rl:30%;--rink:#e8edf7}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Yu Gothic",sans-serif;line-height:1.5}
+main{height:100%;max-width:1040px;margin:0 auto;padding:8px 12px;display:flex;flex-direction:column;gap:8px}
+.top{display:flex;align-items:center;gap:8px}
+h1{font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;font-size:1.25rem;margin:0;flex:1;letter-spacing:.08em}
+button{font:inherit;color:inherit}
+.sm{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:5px 10px;font-size:.85rem;cursor:pointer;min-height:36px}
+.sm.main{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.sm[hidden]{display:none}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.compose{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--accent);border-radius:14px;padding:6px 10px}
+#text{flex:1;min-width:0;min-height:2.6rem;max-height:6rem;overflow-y:auto;font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;font-weight:700;font-size:1.8rem;line-height:1.4;word-break:break-all;cursor:text;padding:2px 0}
+.ch{padding:0 1px}
+.caret{display:inline-block;width:3px;height:1.15em;background:var(--accent);vertical-align:-.18em;margin:0 -1px;animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:0}}
+#text.empty::after{content:"　ここに文字が並びます";font-family:"Zen Maru Gothic",sans-serif;font-weight:400;font-size:.9rem;color:var(--sub)}
+.tools{display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end}
+#note{margin:0;font-size:.8rem;color:#b3261e}
+#note:empty{display:none}
+.words{display:flex;align-items:center;gap:8px;min-height:38px}
+.wcount{flex:none;font-size:.8rem;color:var(--sub)}
+.wlist{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto}
+.wlist:empty::before{content:"「登録」で単語を保存（10個まで）";font-size:.85rem;color:var(--sub)}
+.chip{flex:none;display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:var(--panel);overflow:hidden}
+.chip .word{font-family:"Shippori Mincho",serif;font-weight:700;font-size:1.05rem;border:0;background:transparent;padding:4px 4px 4px 12px;cursor:pointer}
+.chip .del,.chip .edit{border:0;background:transparent;color:var(--sub);padding:6px;cursor:pointer}
+.chip.editing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.playing{background:var(--play)!important;color:#14213d!important}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
+.seg button{flex:1;border:0;background:transparent;padding:6px 14px;cursor:pointer;min-height:38px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.kb{flex:1;min-height:0;display:flex;gap:8px}
+.pad{flex:1;min-width:0;display:grid;gap:6px}
+.pad[hidden]{display:none}
+#padK{grid-template:repeat(4,minmax(0,1fr))/repeat(3,minmax(0,1fr))}
+#padN{grid-template:repeat(2,minmax(0,150px))/repeat(5,minmax(0,1fr));align-content:start}
+#padA{grid-template:repeat(4,minmax(0,1fr))/repeat(7,minmax(0,1fr))}
+.acts{width:min(22%,150px);display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:6px}
+.key{border:1px solid var(--line);border-radius:14px;background:var(--key,var(--panel));color:var(--keyink,var(--ink));cursor:pointer;padding:0;min-width:0;min-height:0;position:relative;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+.rb .key{background:hsl(var(--h,210) var(--rs) var(--rl));color:var(--rink)}
+.key:active{transform:scale(.97)}
+.act{font-size:1.15rem;font-weight:700}
+.act.go{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.mod,.big{font-size:clamp(1.1rem,4vh,1.8rem);font-weight:700}
+.big{font-family:"Shippori Mincho",serif}
+.fk{display:grid;grid-template:1fr 1.5fr 1fr/1fr 1.5fr 1fr;align-items:center;justify-items:center;font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;font-weight:700}
+.fk span{font-size:clamp(.7rem,2.4vh,1rem);opacity:.6;border-radius:8px;padding:0 5px;line-height:1.3}
+.fk .c{font-size:clamp(1.5rem,6vh,2.8rem);opacity:1;grid-area:2/2}
+.fk .u{grid-area:1/2}.fk .l{grid-area:2/1}.fk .r{grid-area:2/3}.fk .d{grid-area:3/2}
+.fk span.sel{background:var(--play);color:#14213d;opacity:1;transform:scale(1.5)}
+.fk span.c.sel{transform:scale(1.2)}
+.ov{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px))}
+.ov[hidden]{display:none}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;width:min(480px,100%);max-height:100%;overflow:auto}
+.card h2{margin:0 0 10px;font-size:1.1rem}
+.row{display:flex;align-items:center;gap:10px;margin:10px 0;font-size:.9rem;flex-wrap:wrap}
+.row>label:first-child{width:5.5em;color:var(--sub)}
+.row input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+.row select{flex:1;min-width:0;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);padding:6px}
+.sw{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
+@media (prefers-reduced-motion:reduce){.caret{animation:none}.key:active{transform:none}}
+@media (max-width:560px){#text{font-size:1.5rem}.tools .sm{padding:4px 8px;font-size:.8rem}}
+</style>
+</head>
+<body>
+<main>
+<div class="top">
+<h1>五十音表</h1>
+<button class="sm" id="fsBtn" type="button" aria-label="フルスクリーン">⛶ 全画面</button>
+<button class="sm" id="setBtn" type="button" aria-label="設定">⚙ 設定</button>
+</div>
+
+<div class="compose">
+<div id="text" class="empty" aria-live="polite"></div>
+<div class="tools">
+<button class="sm" id="save" type="button">登録</button>
+<button class="sm" id="overwrite" type="button" hidden>上書き</button>
+<button class="sm" id="clear" type="button">全消去</button>
+</div>
+</div>
+<p id="note"></p>
+
+<div class="words"><div id="wlist" class="wlist"></div><span class="wcount" id="wcount">0/10</span></div>
+
+<div class="seg" id="modeSeg" role="group" aria-label="ページ">
+<button data-v="kana" aria-pressed="true">かな</button>
+<button data-v="num" aria-pressed="false">数字</button>
+<button data-v="abc" aria-pressed="false">ABC</button>
+</div>
+
+<div class="kb" id="kb">
+<div class="pad" id="padK"></div>
+<div class="pad" id="padN" hidden></div>
+<div class="pad" id="padA" hidden></div>
+<div class="acts">
+<button class="key act" id="bs" type="button" aria-label="1文字消す">⌫</button>
+<button class="key act" id="left" type="button" aria-label="カーソルを左へ">◀</button>
+<button class="key act" id="right" type="button" aria-label="カーソルを右へ">▶</button>
+<button class="key act go" id="playAll" type="button">読み上げ</button>
+</div>
+</div>
+</main>
+
+<div class="ov" id="cdlg" hidden>
+<div class="card" role="alertdialog" aria-labelledby="cmsg" style="width:min(340px,100%)">
+<p id="cmsg" style="margin:0 0 14px;font-size:1.05rem;font-weight:700"></p>
+<div class="row" style="justify-content:flex-end;margin:0"><button class="sm" id="cno" type="button">キャンセル</button><button class="sm main" id="cyes" type="button">削除する</button></div>
+</div>
+</div>
+
+<div class="ov" id="set" hidden>
+<div class="card" role="dialog" aria-label="設定">
+<h2>設定（自動で保存されます）</h2>
+<div class="row"><label for="rate">速さ</label><input type="range" id="rate" min="0.5" max="1.2" step="0.1"></div>
+<div class="row"><label for="se">効果音</label><select id="se"></select></div>
+<div class="row"><label for="vol">効果音の音量</label><input type="range" id="vol" min="0.1" max="1" step="0.1"></div>
+<div class="row"><label for="voice">声</label><select id="voice" disabled><option>読み込み中…</option></select></div>
+<div class="row"><label for="color">キーの色</label><input type="color" id="color" value="#f8fafc"><span id="sws" style="display:flex;gap:6px"></span><button class="sm" id="colorReset" type="button">元に戻す</button></div>
+<div class="row"><label for="rb">色分け</label><input type="checkbox" id="rb"><span>行ごとに色を変える</span></div>
+<div class="row" style="justify-content:flex-end"><button class="sm main" id="setClose" type="button">閉じる</button></div>
+</div>
+</div>
+
+<script>
+var $ = function(i){ return document.getElementById(i); };
+var S = { rate: 0.8, voice: "", color: "", rb: false, mode: "kana", se: "none", vol: 0.5 };
+try { Object.assign(S, JSON.parse(localStorage.getItem("gojuonS") || "{}")); } catch (e) {}
+function saveS(){ try { localStorage.setItem("gojuonS", JSON.stringify(S)); } catch (e) {} }
+
+var buf = [], pos = 0, current = null, voice = null, jaVoices = [];
+var textEl = $("text"), note = $("note");
+function warn(m){ note.textContent = m; }
+
+/* ---------- 音声 ---------- */
+var SAY = { "っ": "あっ", "ー": "あー" };
+var NUMR = ["ゼロ","いち","に","さん","よん","ご","ろく","なな","はち","きゅう"];
+function pickVoice(){
+  if (!("speechSynthesis" in window)) return;
+  var all = speechSynthesis.getVoices(), sel = $("voice");
+  jaVoices = all.filter(function(v){ return /^ja/i.test(v.lang); });
+  sel.innerHTML = "";
+  if (!jaVoices.length) {
+    var o0 = document.createElement("option"); o0.textContent = "日本語音声なし"; sel.appendChild(o0);
+    sel.disabled = true; voice = null; return;
+  }
+  jaVoices.forEach(function(v){
+    var o = document.createElement("option"); o.value = v.voiceURI;
+    o.textContent = v.name + (v.localService ? "" : "（オンライン）"); sel.appendChild(o);
+  });
+  voice = jaVoices.find(function(v){ return v.voiceURI === S.voice; })
+    || jaVoices.find(function(v){ return /kyoko|o-ren|google|haruka|nanami|female/i.test(v.name); })
+    || jaVoices[0];
+  sel.value = voice.voiceURI; sel.disabled = false;
+}
+function speak(t, el, lang){
+  if (!("speechSynthesis" in window)) { warn("このブラウザは音声読み上げに対応していません。"); return; }
+  var busy = speechSynthesis.speaking || speechSynthesis.pending;
+  if (busy) speechSynthesis.cancel();
+  if (!voice) pickVoice();
+  if (current) current.classList.remove("playing");
+  var u = new SpeechSynthesisUtterance(t);
+  u.lang = lang || "ja-JP";
+  if (!lang && voice) u.voice = voice;
+  u.rate = S.rate;
+  current = el;
+  if (el) el.classList.add("playing");
+  var done = function(){ if (el) el.classList.remove("playing"); };
+  u.onend = done; u.onerror = done;
+  if (busy) setTimeout(function(){ speechSynthesis.speak(u); }, 80); else speechSynthesis.speak(u);
+}
+
+/* ---------- 入力欄（カーソル付き） ---------- */
+function drawText(){
+  textEl.innerHTML = "";
+  var caret = function(){ var c = document.createElement("span"); c.className = "caret"; textEl.appendChild(c); return c; };
+  var cEl = null;
+  buf.forEach(function(c, i){
+    if (i === pos) cEl = caret();
+    var s = document.createElement("span"); s.className = "ch"; s.dataset.i = i; s.textContent = c; textEl.appendChild(s);
+  });
+  if (pos === buf.length) cEl = caret();
+  textEl.classList.toggle("empty", !buf.length);
+  if (cEl && cEl.scrollIntoView) cEl.scrollIntoView({ block: "nearest" });
+}
+textEl.addEventListener("click", function(e){
+  var s = e.target.closest(".ch");
+  if (s) { var r = s.getBoundingClientRect(); pos = +s.dataset.i + (e.clientX > r.left + r.width / 2 ? 1 : 0); }
+  else pos = buf.length;
+  drawText();
+});
+function insert(c){ buf.splice(pos, 0, c); pos++; drawText(); }
+$("bs").addEventListener("click", function(){ if (pos > 0) { buf.splice(pos - 1, 1); pos--; drawText(); } });
+$("left").addEventListener("click", function(){ if (pos > 0) { pos--; drawText(); } });
+$("right").addEventListener("click", function(){ if (pos < buf.length) { pos++; drawText(); } });
+$("playAll").addEventListener("click", function(){
+  var t = buf.join(""); if (!t) return;
+  speak(t, this, /^[A-Za-z ]+$/.test(t) ? "en-US" : null);
+});
+$("clear").addEventListener("click", function(){
+  buf = []; pos = 0; drawText(); if ("speechSynthesis" in window) speechSynthesis.cancel();
+  if (editIndex !== null) { setEdit(null); note.textContent = ""; }
+});
+
+/* ---------- かな：フリックキー ---------- */
+var KANA = ["あいうえお","かきくけこ","さしすせそ","たちつてと","なにぬねの","はひふへほ","まみむめも","や「ゆ」よ","らりるれろ","MOD","わをんーっ","、。？！…"];
+var CYC = ["あぁ","いぃ","うぅゔ","えぇ","おぉ","やゃ","ゆゅ","よょ","わゎ","つっづ","かが","きぎ","くぐ","けげ","こご","さざ","しじ","すず","せぜ","そぞ","ただ","ちぢ","てで","とど","はばぱ","ひびぴ","ふぶぷ","へべぺ","ほぼぽ"];
+var NEXT = {};
+CYC.forEach(function(s){ var a = Array.from(s); a.forEach(function(c, i){ NEXT[c] = a[(i + 1) % a.length]; }); });
+var DIRC = ["c","l","u","r","d"];
+function sayChar(c, el){
+  if (!c || /[「」、。？！…]/.test(c)) return;
+  speak(SAY[c] || c, el);
+}
+var padK = $("padK");
+KANA.forEach(function(s, i){
+  var k = document.createElement("button"); k.type = "button"; k.className = "key";
+  k.style.setProperty("--h", (i * 30) % 360);
+  if (s === "MOD") {
+    k.classList.add("mod"); k.textContent = "小 ゛ ゜"; k.setAttribute("aria-label", "小文字・濁点・半濁点");
+    k.addEventListener("click", function(){
+      var c = buf[pos - 1], n = NEXT[c];
+      if (!n) return;
+      buf[pos - 1] = n; drawText();
+      sayChar(/[ゃゅょぁぃぅぇぉゎ]/.test(n) && pos > 1 ? buf[pos - 2] + n : n, k);
+    });
+    padK.appendChild(k); return;
+  }
+  k.classList.add("fk");
+  var cs = Array.from(s), spans = [];
+  cs.forEach(function(c, j){ var sp = document.createElement("span"); sp.className = DIRC[j]; sp.textContent = c; k.appendChild(sp); spans.push(sp); });
+  k.setAttribute("aria-label", cs[0] + "行（フリックで" + cs.slice(1).join("・") + "）");
+  var st = null;
+  function mark(n){ spans.forEach(function(sp, j){ sp.classList.toggle("sel", j === n); }); st.n = n; }
+  k.addEventListener("pointerdown", function(e){
+    st = { x: e.clientX, y: e.clientY, n: 0 };
+    try { k.setPointerCapture(e.pointerId); } catch (x) {}
+    mark(0); e.preventDefault();
+  });
+  k.addEventListener("pointermove", function(e){
+    if (!st) return;
+    var dx = e.clientX - st.x, dy = e.clientY - st.y, n = 0;
+    if (Math.hypot(dx, dy) > 22) n = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 3) : (dy < 0 ? 2 : 4);
+    if (n !== st.n) mark(n);
+  });
+  k.addEventListener("pointerup", function(){
+    if (!st) return;
+    var c = cs[st.n]; spans.forEach(function(sp){ sp.classList.remove("sel"); }); st = null;
+    if (c) { insert(c); sayChar(c, k); }
+  });
+  k.addEventListener("pointercancel", function(){ st = null; spans.forEach(function(sp){ sp.classList.remove("sel"); }); });
+  k.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+  padK.appendChild(k);
+});
+
+/* ---------- 数字 ---------- */
+var padN = $("padN");
+for (var d = 0; d < 10; d++) (function(d){
+  var k = document.createElement("button"); k.type = "button"; k.className = "key big";
+  k.style.setProperty("--h", d * 36); k.textContent = d; k.setAttribute("aria-label", d + "（" + NUMR[d] + "）");
+  k.addEventListener("click", function(){ insert(String(d)); speak(NUMR[d], k); });
+  padN.appendChild(k);
+})(d);
+
+/* ---------- ABC ---------- */
+var padA = $("padA"), upper = true, abcKeys = [];
+for (var a = 0; a < 26; a++) (function(a){
+  var k = document.createElement("button"); k.type = "button"; k.className = "key big";
+  k.style.setProperty("--h", a * 14);
+  k.addEventListener("click", function(){ var L = k.textContent; insert(L); speak(L, k, "en-US"); });
+  padA.appendChild(k); abcKeys.push(k);
+})(a);
+function labelABC(){ abcKeys.forEach(function(k, a){ var L = String.fromCharCode(65 + a); k.textContent = upper ? L : L.toLowerCase(); }); }
+var sp = document.createElement("button"); sp.type = "button"; sp.className = "key mod"; sp.textContent = "空白";
+sp.addEventListener("click", function(){ insert(" "); });
+var cs2 = document.createElement("button"); cs2.type = "button"; cs2.className = "key mod"; cs2.textContent = "Aa";
+cs2.setAttribute("aria-label", "大文字・小文字の切り替え");
+cs2.addEventListener("click", function(){ upper = !upper; labelABC(); });
+padA.appendChild(sp); padA.appendChild(cs2); labelABC();
+
+/* ---------- ページ切り替え ---------- */
+function setMode(m){
+  S.mode = m; saveS();
+  $("padK").hidden = m !== "kana"; $("padN").hidden = m !== "num"; $("padA").hidden = m !== "abc";
+  $("modeSeg").querySelectorAll("button").forEach(function(b){ b.setAttribute("aria-pressed", b.dataset.v === m ? "true" : "false"); });
+}
+$("modeSeg").addEventListener("click", function(e){ var b = e.target.closest("button"); if (b) setMode(b.dataset.v); });
+
+/* ---------- 登録した単語 ---------- */
+var MAX = 10, words = [], editIndex = null, wlist = $("wlist");
+try {
+  var stored = JSON.parse(localStorage.getItem("gojuonWords") || "[]");
+  if (Array.isArray(stored)) words = stored.filter(function(w){ return typeof w === "string" && w; }).slice(0, MAX);
+} catch (e) {}
+function saveWords(){ try { localStorage.setItem("gojuonWords", JSON.stringify(words)); } catch (e) {} }
+function renderWords(){
+  wlist.innerHTML = "";
+  words.forEach(function(w, i){
+    var chip = document.createElement("span"); chip.className = "chip" + (i === editIndex ? " editing" : "");
+    var b = document.createElement("button"); b.type = "button"; b.className = "word"; b.dataset.i = i; b.textContent = w;
+    var ed = document.createElement("button"); ed.type = "button"; ed.className = "edit"; ed.dataset.i = i; ed.textContent = "✎"; ed.setAttribute("aria-label", w + "を編集");
+    var x = document.createElement("button"); x.type = "button"; x.className = "del"; x.dataset.i = i; x.textContent = "×"; x.setAttribute("aria-label", w + "を削除");
+    chip.appendChild(b); chip.appendChild(ed); chip.appendChild(x); wlist.appendChild(chip);
+  });
+  $("wcount").textContent = words.length + "/" + MAX;
+}
+function setEdit(i){ editIndex = i; $("overwrite").hidden = (i === null); renderWords(); }
+$("overwrite").addEventListener("click", function(){
+  var t = buf.join("");
+  if (editIndex === null) return;
+  if (!t) return warn("上書きする内容が空です。");
+  var dup = words.indexOf(t);
+  if (dup !== -1 && dup !== editIndex) return warn("「" + t + "」はすでに登録されています。");
+  words[editIndex] = t; saveWords(); note.textContent = ""; setEdit(null);
+});
+$("save").addEventListener("click", function(){
+  var t = buf.join("");
+  if (!t) return warn("登録する文字を、先に入力欄へ入れてください。");
+  if (words.indexOf(t) !== -1) return warn("「" + t + "」はすでに登録されています。");
+  if (words.length >= MAX) return warn("登録は" + MAX + "個までです。不要な単語の×で消してください。");
+  words.push(t); saveWords(); renderWords(); note.textContent = "";
+});
+wlist.addEventListener("click", function(e){
+  var w = e.target.closest(".word"), x = e.target.closest(".del"), ed = e.target.closest(".edit");
+  if (w) speak(words[+w.dataset.i], w);
+  else if (ed) {
+    var i = +ed.dataset.i; buf = Array.from(words[i]); pos = buf.length; drawText(); setEdit(i);
+    note.textContent = "「" + words[i] + "」を編集中：文字をタップでカーソル移動 →「上書き」で更新";
+  } else if (x) {
+    askDel(+x.dataset.i);
+  }
+});
+
+/* ---------- 設定 ---------- */
+function hexInk(h){
+  var n = parseInt(h.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6 ? "#14213d" : "#ffffff";
+}
+function applyColor(){
+  var kb = $("kb");
+  if (S.color) { kb.style.setProperty("--key", S.color); kb.style.setProperty("--keyink", hexInk(S.color)); $("color").value = S.color; }
+  else { kb.style.removeProperty("--key"); kb.style.removeProperty("--keyink"); }
+  kb.classList.toggle("rb", !!S.rb && !S.color);
+  $("rb").checked = !!S.rb;
+}
+["#ffffff","#ffe8a3","#bfe3ff","#c9f0c9","#ffd0d9","#2c4a8c"].forEach(function(c){
+  var b = document.createElement("button"); b.type = "button"; b.className = "sw"; b.style.background = c; b.setAttribute("aria-label", "色 " + c);
+  b.addEventListener("click", function(){ S.color = c; saveS(); applyColor(); });
+  $("sws").appendChild(b);
+});
+$("color").addEventListener("input", function(){ S.color = this.value; saveS(); applyColor(); });
+$("colorReset").addEventListener("click", function(){ S.color = ""; saveS(); applyColor(); });
+$("rb").addEventListener("change", function(){ S.rb = this.checked; if (S.rb) S.color = ""; saveS(); applyColor(); });
+$("rate").value = S.rate;
+$("rate").addEventListener("input", function(){ S.rate = parseFloat(this.value); saveS(); });
+$("voice").addEventListener("change", function(){
+  voice = jaVoices.find(function(v){ return v.voiceURI === this.value; }, this) || voice;
+  S.voice = this.value; saveS(); speak("こんにちは", null);
+});
+$("setBtn").addEventListener("click", function(){ $("set").hidden = false; });
+$("setClose").addEventListener("click", function(){ $("set").hidden = true; });
+$("set").addEventListener("click", function(e){ if (e.target === this) this.hidden = true; });
+document.addEventListener("keydown", function(e){ if (e.key === "Escape") $("set").hidden = true; });
+
+/* ---------- フルスクリーン ---------- */
+var FSMSG = "この端末ではフルスクリーンにできません。共有メニューの「ホーム画面に追加」で全画面アプリとして使えます。";
+$("fsBtn").addEventListener("click", function(){
+  var dc = document, el = dc.documentElement;
+  try {
+    if (dc.fullscreenElement || dc.webkitFullscreenElement) { (dc.exitFullscreen || dc.webkitExitFullscreen).call(dc); return; }
+    var r = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!r) return warn(FSMSG);
+    var p = r.call(el);
+    if (p && p.catch) p.catch(function(){ warn(FSMSG); });
+  } catch (e) { warn(FSMSG); }
+});
+
+/* ---------- 初期化 ---------- */
+if ("speechSynthesis" in window) {
+  pickVoice(); speechSynthesis.addEventListener("voiceschanged", pickVoice);
+  var tries = 0, iv = setInterval(function(){ if (jaVoices.length || ++tries > 20) { clearInterval(iv); return; } pickVoice(); }, 300);
+}
+var delIdx = null;
+function askDel(j){ delIdx = j; $("cmsg").textContent = "「" + words[j] + "」を削除しますか？"; $("cdlg").hidden = false; $("cno").focus(); }
+function closeDel(){ $("cdlg").hidden = true; delIdx = null; }
+$("cno").addEventListener("click", closeDel);
+$("cdlg").addEventListener("click", function(e){ if (e.target === this) closeDel(); });
+document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeDel(); });
+$("cyes").addEventListener("click", function(){
+  var j = delIdx; closeDel();
+  if (j === null || j >= words.length) return;
+  words.splice(j, 1); saveWords();
+  if (editIndex === j) setEdit(null); else { if (editIndex !== null && j < editIndex) editIndex--; renderWords(); }
+});
+/* ---------- 効果音 ---------- */
+var AC = null;
+function ac(){
+  if (!AC) { var C = window.AudioContext || window.webkitAudioContext; if (!C) return null; try { AC = new C(); } catch (e) { return null; } }
+  if (AC.state === "suspended") AC.resume();
+  return AC;
+}
+function tone(f1, f2, dur, type, g, delay){
+  var c = ac(), v = g * S.vol; if (!c || v < 0.001) return;
+  var t = c.currentTime + (delay || 0), o = c.createOscillator(), a = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(f1, t);
+  if (f2 !== f1) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  a.gain.setValueAtTime(v, t); a.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(a); a.connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+var SE = [
+  ["none", "なし", function(){}],
+  ["pon", "ぽん", function(){ tone(520, 780, 0.14, "sine", 0.7); }],
+  ["pi", "ピッ", function(){ tone(1400, 1400, 0.07, "square", 0.25); }],
+  ["click", "カチッ", function(){ tone(260, 120, 0.05, "triangle", 0.8); }],
+  ["pop", "ぷにっ", function(){ tone(300, 900, 0.1, "sine", 0.7); }],
+  ["kira", "きらきら", function(){ tone(1318, 1318, 0.18, "sine", 0.5); tone(1760, 1760, 0.22, "sine", 0.5, 0.08); }],
+  ["drum", "ドン", function(){ tone(180, 50, 0.2, "sine", 0.9); }]
+];
+function playSE(id){ for (var i = 0; i < SE.length; i++) if (SE[i][0] === id) { SE[i][2](); return; } }
+SE.forEach(function(s){ var o = document.createElement("option"); o.value = s[0]; o.textContent = s[1]; $("se").appendChild(o); });
+$("se").value = S.se;
+$("vol").value = S.vol;
+$("se").addEventListener("change", function(){ S.se = this.value; saveS(); playSE(S.se); });
+$("vol").addEventListener("input", function(){ S.vol = parseFloat(this.value); saveS(); });
+$("vol").addEventListener("change", function(){ playSE(S.se); });
+document.addEventListener("pointerdown", function(e){ if (e.target.closest && e.target.closest(".key")) playSE(S.se); }, true);
+
+applyColor(); setMode(S.mode || "kana"); renderWords(); drawText();
+</script>
+</body>
+</html>
